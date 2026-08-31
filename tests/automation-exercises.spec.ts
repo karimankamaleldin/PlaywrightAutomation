@@ -1,4 +1,5 @@
 import { test, expect , Page} from '@playwright/test';
+import { testData } from '../tests/Test';
 
 const BASE_URL = 'https://www.tutorialspoint.com/selenium/practice';
 
@@ -7,7 +8,26 @@ async function goToPage(page: Page, pageName: string) {
         waitUntil: 'domcontentloaded'
     });
 }
+function getDateMonthsAgo(months: number): string {
+    const today = new Date();
 
+    const year = today.getFullYear();
+    const month = today.getMonth() - months;
+    const day = today.getDate();
+
+    const targetDate = new Date(year, month, 1);
+
+    const lastDayOfTargetMonth =
+        new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0).getDate();
+
+    targetDate.setDate(Math.min(day, lastDayOfTargetMonth));
+
+    const yyyy = targetDate.getFullYear();
+    const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(targetDate.getDate()).padStart(2, '0');
+
+    return `${yyyy}-${mm}-${dd}`;
+}
 
 
 test('Task 103 - Radio Button', async ({ page }) => {
@@ -41,6 +61,17 @@ test('Task 104 - Web Tables', async ({ page }) => {
     await deparment.fill('QC');
     await page.screenshot({ path: 'web-table-form.png' });
     await page.locator('input[type="submit"][value="Login"]').click();
+    
+
+const deleteButtons = page.locator('a.delete-wrap');
+
+const count = await deleteButtons.count();
+
+for (let i = 0; i < count; i++) {
+    await deleteButtons.first().click();
+}
+
+await expect(deleteButtons).toHaveCount(0);
 
 });
 
@@ -75,7 +106,8 @@ test('Task 107 - Upload and Download', async ({ page }) => {
 
     await goToPage(page, 'upload-download.php');
 const UploadButton = page.locator('#uploadFile');
-await UploadButton.setInputFiles('D:\\PlaywrightAutomation\\test.txt');
+await UploadButton.setInputFiles(testData.uploadFilePath);
+await expect(UploadButton).toHaveValue(/test\.txt/);
  await page.screenshot({ path: 'upload-file-form.png' });
 });
 
@@ -108,7 +140,10 @@ await femaleRadio.check();
 const mobile = page.locator('#mobile');
     await mobile.fill('01281360506');
 const Birthdate = page.locator('#dob');
-    await Birthdate.fill('2026-06-25');
+
+const twoMonthsAgo = getDateMonthsAgo(2);
+
+await Birthdate.fill(twoMonthsAgo);
 const subject = page.locator('#subjects');
     await subject.fill('Math');
 
